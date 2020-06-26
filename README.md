@@ -38,7 +38,7 @@ NAS与WiFi6+究竟能擦出怎样的火花？ 如何让“派”告别吃灰的�
 隐忍数年，“巧遇”疫情，抓住“机遇”，于是乎趁机创造解决如上场景的小平台，暂命名为**迷你PT仓库**
 这个是我的第一版部分硬件预览图
 	<div  align="center">   
-	<img src="https://img-blog.csdnimg.cn/2020062622311518.png" width = "400" height = "70" >
+	<img src="https://img-blog.csdnimg.cn/2020062622311518.png" >
 	</div>
 
 **注1：上述仅仅是个人部分粗鄙的体验，不全面不合理之处还望不吝赐教。**
@@ -118,11 +118,9 @@ NAS与WiFi6+究竟能擦出怎样的火花？ 如何让“派”告别吃灰的�
 <br />
 
 **原创不易，严禁剽窃！**
-
 	<div  align="center">   
-	<img src="https://img-blog.csdnimg.cn/20190918110341834.jpg" width = "200" height = "200" >
+	<img src="https://img-blog.csdnimg.cn/20190918110341834.jpg">
 	</div>
-
 
 欢迎大家关注我创建的微信公众号——小白仓库
 原创经验资料分享：包含但不仅限于FPGA、ARM、RISC-V、Linux、LabVIEW等软硬件开发，另外分享生活中的趣事以及感悟。目的是建立一个平台记录学习过的知识，并分享出来自认为有用的与感兴趣的道友相互交流进步。
