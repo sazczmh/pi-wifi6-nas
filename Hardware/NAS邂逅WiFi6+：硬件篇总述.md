@@ -129,7 +129,7 @@
 
 ## 6.4 WiFi6路由器
 
-用的现成的AX3 PRO，没试过其他的，具体性能测试可以见如下链接https://www.zhihu.com/question/39914720。
+用的现成的AX3 PRO，没试过其他的，具体性能测试可以见如下链接https://www.zhihu.com/question/399147200。
 
 目前这块没有集成的想法，当然也是没那个能力。看到github有用FPGA做开源WiFi的，等以后有机会再把这块纳入议程。
 
