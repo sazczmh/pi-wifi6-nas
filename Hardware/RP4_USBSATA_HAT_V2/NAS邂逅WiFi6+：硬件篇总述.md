@@ -1,0 +1,152 @@
+﻿@[TOC](NAS邂逅WiFi6+：硬件篇总述)
+
+**注：下面说的有点唠叨，但都是设计过程中的种种思考，希望可以给部分人一些启发，也欢迎批评指正。**
+
+
+
+**开源地址：[pi-wifi6-nas](https://github.com/sazczmh/pi-wifi6-nas)**
+# 1 项目来源
+
+爱折腾的小伙伴们可能都想DIY一个私人NAS，我也不例外，从最初几年前仅仅是有想法，到如今感觉手头经得起一点小折腾、有些许时间供自己折腾之后，下定决心做一个私人定制化的开源NAS，一步一步实现一个智能终端，岂不快哉。
+
+硬件设计的来源自国外的一款树莓派HAT：[Dual/Quad SATA HAT](https://wiki.radxa.com/Dual_Quad_SATA_HAT)，因为没货，故只能自己设计电路来实现。
+
+这款HAT的介绍视频可以在Youtube上查看，感兴趣的小伙伴们可以去瞧瞧。
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200630163738915.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70)
+
+> https://wiki.radxa.com/Dual_Quad_SATA_HAT
+
+# 2 SBC“选型”
+适合做NAS的单板电脑很多，树莓派绝对称不上性价比最高的那一类，直至2019年树莓派4B问世，树莓派才具备DIY轻量级NAS的**最低需求**:
+
+ - USB3.0
+ - 千兆以太网
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200626220836128.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70#pic_center)
+通过USB3.0可以扩展SATA接口，然后通过PM，复用多路SATA接口，这也是本文的主干设计思路。
+
+本文以树莓派4B为例进行开源设计，其他SBC可以实现，不过要注意以下几个方面。
+
+
+ - 一定要具有USB3.0和千兆以太网，具备PCIE也可，SATA也可，否则做出来的NAS不值得一用；
+ - 定位孔的位置需要修改；
+ - 铜柱的长度需要适当的改变。
+
+**注：如果追求性价比，树莓派绝对不是一个好选择，某宝几百元便可组装一个，本文仅针对那些愿意折腾的小伙伴。**
+
+**注：Port multiplier，可以简称为PM，翻译为中文为SATA端口复用器，也称端口倍增器，它使多路SATA设备能够连接到一个SATA主端口上。许多常规的控制器并不支持这个特性，因为这不是SATA控制所必需的。**
+
+
+# 3 RP4_USBSATA_HAT_V1
+
+如果有尝试从电路板开始进行设计NAS的小伙伴，一定会遇到主控资料的问题。硬盘柜常用的解决方案之一来自台湾省的JMicron公司，然而该公司的主控芯片资料，在网上一点都搜不到，连基本的数据手册都没有。
+
+通过邮箱咨询，得到的是这样的回复，虽然最终获取到了个别芯片的资料，但最终还是暂且放弃了这个版本的设计，接下来会详说。
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200630165848836.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70)
+
+设计一款电路板的正常思路，应该是从官网获取相关芯片的信息，从而选型进行设计，看着官网这一款芯片还不错，拿来进行设计。
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200630170808312.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70)
+
+然后就悲剧了，这款JMS578不支持PM，我当时还专门咨询官网的技术，可以回应模棱两可...，主要原因估计是我没有可以开发的市场🙃，才会这样对我的吧。
+
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/2020062622311518.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70#pic_center)
+
+因JMS578不支持PM，第一版电路仅支持一路SATA。
+
+支持PM的主控JMS567，官网都没有列出...，知道真相的我，心里哇凉哇凉的，当然没有放弃折腾，要不然也不会有第二版电路。
+
+# 4 RP4_USBSATA_HAT_V2
+第二版电路，偷了个懒，从以下AD的3D预览图也可以看出究竟，这代电路并没有集成主控，仅仅画了个扩展板，SATA信号通过PCI-E x4插槽接入。
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200630172418947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70)
+主控方案用的
+
+ - SATA桥接USB3.0控制器：JMS567
+ - SATA PM主控：JMB575
+
+主控板用的是一块洋垃圾，从某宝淘到，30元还是非常值的，至少不用焊接QFN封装的芯片了hhh。
+
+感兴趣的话，可以直接在淘宝上搜**PS500U3**，还有Type C版本的**PS500C3**，我这里就不放链接了。
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200630173043654.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70#pic_center )
+**注：目前已知的小问题**
+
+ - CPU散热风扇接口需要改善；
+ - SATA接口可以放的更紧凑，减少整体尺寸；
+ - 移动PCI-E x4位置，减少SATA硬盘与PS500U3的物理上冲突；
+ - ...。
+
+**注：为了减少功耗，仅支持2.5寸笔记本硬盘**
+
+# 5 NAS支架
+## 5.1 底盘
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/2020063017392183.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70)
+
+## 5.2 硬盘支架
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200630174022963.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70)
+
+**注：目前已知的小问题**
+
+ - 硬盘支架可以和底盘合并，减少板材的浪费；
+ - 因SATA接口的位置，导致硬盘硬盘支架存在不稳定的问题-边缘那个支架断裂；
+ - ...。
+ 
+注：使用PCB做支架的原因是，嘉立创5元2层板打样包邮😋，不用白不用。
+
+
+# 6 杂项
+
+
+
+## 6.1 树莓派散热马甲
+
+散热效果不错，但小风扇质量不咋地，可以不用，后面用CPU风扇集中散热。
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200630175040946.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70)
+
+## 6.2 散热风扇
+
+某宝买的9025尺寸的4线智能调速风扇，可以利用树莓派PWM控制转速，结合树莓派散热马甲树莓派核心温度可以保持40度以下，这样可以保持较好的读写性能。
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200630175357354.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70)
+ 
+
+## 6.3 固定零件
+
+- 8枚M3*65铜柱，用于整体的固定；
+- 4枚M2.5*16螺丝，用于连接底盘与树莓派散热马甲；
+- 4枚M3*15铜柱，用于连接SATA扩展板与9025风扇；
+ - 8枚M3螺母、8枚M3螺丝。
+
+ 
+
+## 6.4 WiFi6路由器
+
+用的现成的AX3 PRO，没试过其他的，具体性能测试可以见如下链接https://www.zhihu.com/question/39914720。
+
+目前这块没有集成的想法，当然也是没那个能力。看到github有用FPGA做开源WiFi的，等以后有机会再把这块纳入议程。
+
+## 6.5 连接线材
+
+ - 以太网线至少超五类
+ - USB3.0A转B
+
+<br />
+<br />
+
+
+**最后制作出来的总体效果为**
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200626210621458.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70#pic_center =600x800)
+**注：如果硬件这块不想动手做，也不用灰心，可以去某宝，某东买现成的USB3.0硬盘盒或者硬盘柜，一样的使用。**
+
+<br />
+<br />
+
+**原创不易，严禁剽窃！**
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190918110341834.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM1NzEyMTY5,size_16,color_FFFFFF,t_70#pic_center  =200x200)
+
+
+欢迎大家关注我创建的微信公众号——小白仓库
+原创经验资料分享：包含但不仅限于FPGA、ARM、RISC-V、Linux、LabVIEW等软硬件开发，另外分享生活中的趣事以及感悟。目的是建立一个平台记录学习过的知识，并分享出来自认为有用的与感兴趣的道友相互交流进步。
