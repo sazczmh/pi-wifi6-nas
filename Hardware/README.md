@@ -1,4 +1,4 @@
-bug集结地
+# bug集结地
 
 ## RP4_USBSATA_HAT_V2
  - CPU散热风扇接口需要改善；
